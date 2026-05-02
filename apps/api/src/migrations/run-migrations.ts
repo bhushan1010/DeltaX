@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { AppDataSource } from './config/ormconfig';
+import { AppDataSource } from '../config/ormconfig';
 
 async function runMigrations() {
   try {

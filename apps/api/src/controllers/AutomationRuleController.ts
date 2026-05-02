@@ -18,7 +18,7 @@ export class AutomationRuleController {
         page: Number(page),
         limit: Number(limit),
         isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
-        sortBy: sortBy as keyof any,
+        sortBy: sortBy as any,
         sortOrder: sortOrder as 'ASC' | 'DESC',
       });
 
@@ -51,7 +51,7 @@ export class AutomationRuleController {
 
   getRuleById = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const rule = await this.ruleService.getRuleById(id);
 
       if (!rule) {
@@ -67,7 +67,7 @@ export class AutomationRuleController {
 
   updateRule = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const ruleData = req.body;
 
       const rule = await this.ruleService.updateRule(id, ruleData);
@@ -85,7 +85,7 @@ export class AutomationRuleController {
 
   deleteRule = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const deleted = await this.ruleService.deleteRule(id);
 
       if (!deleted) {
@@ -101,7 +101,7 @@ export class AutomationRuleController {
 
   toggleRuleStatus = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const rule = await this.ruleService.toggleRuleStatus(id);
 
       if (!rule) {

@@ -49,26 +49,26 @@ export class LeadActivityService {
   }
 
   async getActivityById(id: string): Promise<LeadActivity | null> {
-    return await this.activityRepository.findOneBy({ id });
+    return await this.activityRepository.findOneBy({ id: Number(id) });
   }
 
   async updateActivity(id: string, activityData: Partial<LeadActivity>): Promise<LeadActivity | null> {
-    await this.activityRepository.update(id, activityData);
-    return await this.activityRepository.findOneBy({ id });
+    await this.activityRepository.update(Number(id), activityData);
+    return await this.activityRepository.findOneBy({ id: Number(id) });
   }
 
   async deleteActivity(id: string): Promise<boolean> {
-    const result = await this.activityRepository.delete(id);
+    const result = await this.activityRepository.delete(Number(id));
     return result.affected !== 0;
   }
 
   async completeActivity(id: string): Promise<LeadActivity | null> {
-    const activity = await this.activityRepository.findOneBy({ id });
+    const activity = await this.activityRepository.findOneBy({ id: Number(id) });
     if (!activity) {
       return null;
     }
 
-    activity.completed_at = new Date();
+    activity.completed_at = new Date().toISOString();
     return await this.activityRepository.save(activity);
   }
 }

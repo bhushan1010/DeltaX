@@ -6,7 +6,7 @@ export class LeadActivityController {
 
   getActivitiesByLeadId = async (req: Request, res: Response) => {
     try {
-      const { leadId } = req.params;
+      const leadId = String(req.params.leadId);
       const {
         page = 1,
         limit = 10,
@@ -18,8 +18,8 @@ export class LeadActivityController {
       const [activities, total] = await this.activityService.getActivitiesByLeadId(leadId, {
         page: Number(page),
         limit: Number(limit),
-        activityType: Array.isArray(activityType) ? activityType : activityType ? [activityType] : undefined,
-        sortBy: sortBy as keyof any,
+        activityType: Array.isArray(activityType) ? (activityType as string[]) : activityType ? [activityType as string] : undefined,
+        sortBy: sortBy as any,
         sortOrder: sortOrder as 'ASC' | 'DESC',
       });
 
@@ -52,7 +52,7 @@ export class LeadActivityController {
 
   getActivityById = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const activity = await this.activityService.getActivityById(id);
 
       if (!activity) {
@@ -68,7 +68,7 @@ export class LeadActivityController {
 
   updateActivity = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const activityData = req.body;
 
       const activity = await this.activityService.updateActivity(id, activityData);
@@ -86,7 +86,7 @@ export class LeadActivityController {
 
   deleteActivity = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const deleted = await this.activityService.deleteActivity(id);
 
       if (!deleted) {
@@ -102,7 +102,7 @@ export class LeadActivityController {
 
   completeActivity = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const activity = await this.activityService.completeActivity(id);
 
       if (!activity) {

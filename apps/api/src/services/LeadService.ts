@@ -14,7 +14,7 @@ export class LeadService {
   async createLead(leadData: Partial<Lead>, assignedToId?: string): Promise<Lead> {
     const lead = this.leadRepository.create({
       ...leadData,
-      assigned_to: assignedToId ? { id: assignedToId } : undefined,
+      assigned_to: assignedToId ? { id: Number(assignedToId) } as any : undefined,
     });
 
     return await this.leadRepository.save(lead);
@@ -74,38 +74,38 @@ export class LeadService {
   }
 
   async getLeadById(id: string): Promise<Lead | null> {
-    return await this.leadRepository.findOneBy({ id });
+    return await this.leadRepository.findOneBy({ id: Number(id) });
   }
 
   async updateLead(id: string, leadData: Partial<Lead>): Promise<Lead | null> {
-    await this.leadRepository.update(id, leadData);
-    return await this.leadRepository.findOneBy({ id });
+    await this.leadRepository.update(Number(id), leadData);
+    return await this.leadRepository.findOneBy({ id: Number(id) });
   }
 
   async deleteLead(id: string): Promise<boolean> {
-    const result = await this.leadRepository.delete(id);
+    const result = await this.leadRepository.delete(Number(id));
     return result.affected !== 0;
   }
 
   async assignLead(leadId: string, userId: string): Promise<Lead | null> {
-    const lead = await this.leadRepository.findOneBy({ id: leadId });
+    const lead = await this.leadRepository.findOneBy({ id: Number(leadId) });
     if (!lead) {
       return null;
     }
 
-    const user = await this.userRepository.findOneBy({ id: userId });
+    const user = await this.userRepository.findOneBy({ id: Number(userId) });
     if (!user) {
       return null;
     }
 
     lead.assigned_to = user;
-    lead.assigned_at = new Date();
+    lead.assigned_at = new Date().toISOString();
 
     return await this.leadRepository.save(lead);
   }
 
   async updateLeadStatus(leadId: string, status: Lead['status'], userId: string): Promise<Lead | null> {
-    const lead = await this.leadRepository.findOneBy({ id: leadId });
+    const lead = await this.leadRepository.findOneBy({ id: Number(leadId) });
     if (!lead) {
       return null;
     }

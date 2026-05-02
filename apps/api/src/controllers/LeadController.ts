@@ -24,7 +24,7 @@ export class LeadController {
         source: source ? [source as string] : undefined,
         assignedTo: assignedTo as string | undefined,
         search: search as string | undefined,
-        sortBy: sortBy as keyof any,
+        sortBy: sortBy as any,
         sortOrder: sortOrder as 'ASC' | 'DESC',
       });
 
@@ -45,7 +45,7 @@ export class LeadController {
 
   getLeadById = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const lead = await this.leadService.getLeadById(id);
 
       if (!lead) {
@@ -65,7 +65,7 @@ export class LeadController {
       const { assignedTo } = req.body; // Assuming assignedTo is passed separately
 
       const lead = await this.leadService.createLead(leadData, assignedTo);
-      
+
       // Emit socket event for new lead
       const io = req.app.get('io');
       if (io) {
@@ -81,7 +81,7 @@ export class LeadController {
 
   updateLead = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const leadData = req.body;
 
       const lead = await this.leadService.updateLead(id, leadData);
@@ -89,7 +89,7 @@ export class LeadController {
       if (!lead) {
         return res.status(404).json({ error: 'Lead not found' });
       }
-      
+
       // Emit socket event for lead update
       const io = req.app.get('io');
       if (io) {
@@ -105,13 +105,13 @@ export class LeadController {
 
   deleteLead = async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const deleted = await this.leadService.deleteLead(id);
 
       if (!deleted) {
         return res.status(404).json({ error: 'Lead not found' });
       }
-      
+
       // Emit socket event for lead deletion
       const io = req.app.get('io');
       if (io) {
@@ -138,7 +138,7 @@ export class LeadController {
       if (!lead) {
         return res.status(404).json({ error: 'Lead or User not found' });
       }
-      
+
       // Emit socket event for lead assignment
       const io = req.app.get('io');
       if (io) {
@@ -156,20 +156,20 @@ export class LeadController {
 
   updateLeadStatus = async (req: Request, res: Response) => {
     try {
-      const { leadId } = req.params;
+      const leadId = String(req.params.leadId);
       const { status } = req.body;
-      const { userId } = req.body; // In a real app, this would come from auth middleware
+      const userId = String(req.body.userId || '');
 
       if (!leadId || !status) {
         return res.status(400).json({ error: 'Lead ID and status are required' });
       }
 
-      const lead = await this.leadService.updateLeadStatus(leadId, status, userId || '');
+      const lead = await this.leadService.updateLeadStatus(leadId, status, userId);
 
       if (!lead) {
         return res.status(404).json({ error: 'Lead not found' });
       }
-      
+
       // Emit socket event for status change
       const io = req.app.get('io');
       if (io) {

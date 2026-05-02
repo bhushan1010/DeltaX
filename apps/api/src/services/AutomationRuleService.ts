@@ -48,21 +48,21 @@ export class AutomationRuleService {
   }
 
   async getRuleById(id: string): Promise<AutomationRule | null> {
-    return await this.ruleRepository.findOneBy({ id });
+    return await this.ruleRepository.findOneBy({ id: Number(id) });
   }
 
   async updateRule(id: string, ruleData: Partial<AutomationRule>): Promise<AutomationRule | null> {
-    await this.ruleRepository.update(id, ruleData);
-    return await this.ruleRepository.findOneBy({ id });
+    await this.ruleRepository.update(Number(id), ruleData);
+    return await this.ruleRepository.findOneBy({ id: Number(id) });
   }
 
   async deleteRule(id: string): Promise<boolean> {
-    const result = await this.ruleRepository.delete(id);
+    const result = await this.ruleRepository.delete(Number(id));
     return result.affected !== 0;
   }
 
   async toggleRuleStatus(id: string): Promise<AutomationRule | null> {
-    const rule = await this.ruleRepository.findOneBy({ id });
+    const rule = await this.ruleRepository.findOneBy({ id: Number(id) });
     if (!rule) {
       return null;
     }
