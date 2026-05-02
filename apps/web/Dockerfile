@@ -1,12 +1,12 @@
-# --- Build Stage ---
-FROM node:20-alpine AS builder
+FROM node:20-alpine
+
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --legacy-peer-deps
+# Install dependencies + serve globally
+RUN npm install --legacy-peer-deps && npm install -g serve
 
 # Copy source code
 COPY . .
@@ -14,18 +14,8 @@ COPY . .
 # Build the Vite app
 RUN npm run build
 
-# --- Production Stage ---
-FROM node:20-alpine
-WORKDIR /app
-
-# Install serve to host static files
-RUN npm install -g serve
-
-# Copy built static files from builder
-COPY --from=builder /app/dist ./dist
-
-# Expose port (Railway injects $PORT)
+# Expose port
 EXPOSE 3000
 
-# Serve static files on Railway's assigned port
-CMD serve -s dist -l ${PORT:-3000}
+# Serve the built static files (PORT is injected by Railway)
+CMD serve -s dist -l $PORT
