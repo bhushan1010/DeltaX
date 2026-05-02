@@ -35,7 +35,7 @@ jobs:
     # Frontend Setup & Test
     - name: Install Web Dependencies
       working-directory: ./apps/web
-      run: npm ci || npm install
+      run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
     - name: Build Web
       working-directory: ./apps/web

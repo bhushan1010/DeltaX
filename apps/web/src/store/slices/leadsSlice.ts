@@ -1,266 +1,167 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { RootState } from '../index';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-// Define the type for our lead
+export type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Negotiation' | 'Converted' | 'Not Interested' | 'Lost';
+export type LeadSource = 'Website' | 'Referral' | 'Showroom' | 'Phone';
+
 export interface Lead {
   id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
+  name: string;
   phone: string;
-  source: string;
-  status: string;
-  priority: number;
-  interested_car_model?: string | null;
-  budget_min?: number | null;
-  budget_max?: number | null;
-  preferred_contact_time?: string | null;
-  financing_needed: boolean;
-  trade_in_vehicle?: string | null;
-  assigned_to?: {
-    id: string;
-    full_name: string;
-    email: string;
-  } | null;
-  assigned_at?: string | null;
-  lead_score: number;
-  tags: string[];
-  notes?: string | null;
-  first_contacted_at?: string | null;
-  last_contacted_at?: string | null;
-  converted_at?: string | null;
-  expected_close_date?: string | null;
-  created_at: string;
-  updated_at: string;
+  email: string;
+  address?: string;
+  source: LeadSource;
+  status: LeadStatus;
+  assignedTo: string;
+  assignedToName: string;
+  vehicleInterest?: string;
+  budget?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Define the initial state
+export interface Activity {
+  id: string;
+  leadId: string;
+  type: 'call' | 'email' | 'note' | 'status_change';
+  description: string;
+  createdAt: string;
+  createdBy: string;
+}
+
 interface LeadsState {
   leads: Lead[];
-  loading: boolean;
-  error: string | null;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  activities: Activity[];
+  selectedLead: Lead | null;
   filters: {
-    status: string[];
-    source: string[];
-    assignedTo: string | null;
     search: string;
+    status: LeadStatus | 'All';
+    dateRange: { start: string; end: string } | null;
   };
 }
 
-const initialState: LeadsState = {
-  leads: [],
-  loading: false,
-  error: null,
-  pagination: {
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0,
+const mockLeads: Lead[] = [
+  {
+    id: '1',
+    name: 'John Smith',
+    phone: '+1 (555) 123-4567',
+    email: 'john.smith@email.com',
+    address: '123 Main St, Springfield, IL 62701',
+    source: 'Website',
+    status: 'New',
+    assignedTo: '1',
+    assignedToName: 'Sarah Johnson',
+    vehicleInterest: '2024 Honda Accord',
+    budget: 35000,
+    notes: 'Interested in hybrid model',
+    createdAt: '2026-05-01T10:30:00Z',
+    updatedAt: '2026-05-01T10:30:00Z',
   },
+  {
+    id: '2',
+    name: 'Emily Davis',
+    phone: '+1 (555) 234-5678',
+    email: 'emily.davis@email.com',
+    source: 'Referral',
+    status: 'Contacted',
+    assignedTo: '2',
+    assignedToName: 'Mike Chen',
+    vehicleInterest: '2024 Toyota RAV4',
+    budget: 42000,
+    createdAt: '2026-04-30T14:20:00Z',
+    updatedAt: '2026-05-01T09:15:00Z',
+  },
+  {
+    id: '3',
+    name: 'Robert Johnson',
+    phone: '+1 (555) 345-6789',
+    email: 'robert.j@email.com',
+    source: 'Showroom',
+    status: 'Qualified',
+    assignedTo: '1',
+    assignedToName: 'Sarah Johnson',
+    vehicleInterest: '2024 Ford F-150',
+    budget: 55000,
+    createdAt: '2026-04-28T11:00:00Z',
+    updatedAt: '2026-05-01T16:45:00Z',
+  },
+  {
+    id: '4',
+    name: 'Lisa Martinez',
+    phone: '+1 (555) 456-7890',
+    email: 'lisa.m@email.com',
+    source: 'Phone',
+    status: 'Negotiation',
+    assignedTo: '2',
+    assignedToName: 'Mike Chen',
+    vehicleInterest: '2024 Chevrolet Equinox',
+    budget: 38000,
+    createdAt: '2026-04-25T09:30:00Z',
+    updatedAt: '2026-05-02T08:20:00Z',
+  },
+  {
+    id: '5',
+    name: 'David Williams',
+    phone: '+1 (555) 567-8901',
+    email: 'david.w@email.com',
+    source: 'Website',
+    status: 'Converted',
+    assignedTo: '1',
+    assignedToName: 'Sarah Johnson',
+    vehicleInterest: '2024 Mazda CX-5',
+    budget: 33000,
+    createdAt: '2026-04-20T13:15:00Z',
+    updatedAt: '2026-04-28T10:00:00Z',
+  },
+];
+
+const initialState: LeadsState = {
+  leads: mockLeads,
+  activities: [],
+  selectedLead: null,
   filters: {
-    status: [],
-    source: [],
-    assignedTo: null,
     search: '',
+    status: 'All',
+    dateRange: null,
   },
 };
-
-// Async thunks
-export const fetchLeads = createAsyncThunk(
-  'leads/fetchLeads',
-  async (
-    { page, limit, status, source, assignedTo, search, sortBy, sortOrder }: {
-      page?: number;
-      limit?: number;
-      status?: string[];
-      source?: string[];
-      assignedTo?: string;
-      search?: string;
-      sortBy?: string;
-      sortOrder?: 'ASC' | 'DESC';
-    },
-    { rejectWithValue }
-  ) => {
-    try {
-      const params = new URLSearchParams();
-      if (page) params.append('page', page.toString());
-      if (limit) params.append('limit', limit.toString());
-      if (status && status.length > 0) status.forEach(s => params.append('status', s));
-      if (source && source.length > 0) source.forEach(s => params.append('source', s));
-      if (assignedTo) params.append('assignedTo', assignedTo);
-      if (search) params.append('search', search);
-      if (sortBy) params.append('sortBy', sortBy);
-      if (sortOrder) params.append('sortOrder', sortOrder);
-
-      const response = await fetch(`/api/v1/leads?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch leads');
-      }
-      const data = await response.json();
-      // Assuming the API returns { leads: [], total: number }
-      return { leads: data.leads, total: data.total };
-    } catch (err: any) {
-      return rejectWithValue(err.message || 'An error occurred');
-    }
-  }
-);
-
-export const createLead = createAsyncThunk(
-  'leads/createLead',
-  async (leadData: Omit<Lead, 'id' | 'created_at' | 'updated_at'>, { rejectWithValue }) => {
-    try {
-      const response = await fetch('/api/v1/leads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(leadData),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to create lead');
-      }
-      return await response.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message || 'An error occurred');
-    }
-  }
-);
-
-export const updateLead = createAsyncThunk(
-  'leads/updateLead',
-  async ({ id, leadData }: { id: string; leadData: Partial<Lead> }, { rejectWithValue }) => {
-    try {
-      const response = await fetch(`/api/v1/leads/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(leadData),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update lead');
-      }
-      return await response.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message || 'An error occurred');
-    }
-  }
-);
-
-export const deleteLead = createAsyncThunk(
-  'leads/deleteLead',
-  async (id: string, { rejectWithValue }) => {
-    try {
-      const response = await fetch(`/api/v1/leads/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete lead');
-      }
-      return id;
-    } catch (err: any) {
-      return rejectWithValue(err.message || 'An error occurred');
-    }
-  }
-);
 
 const leadsSlice = createSlice({
   name: 'leads',
   initialState,
   reducers: {
-    setLeadsFilters: (state, action: PayloadAction<Partial<LeadsState['filters']>>) => {
+    setLeads: (state, action: PayloadAction<Lead[]>) => {
+      state.leads = action.payload;
+    },
+    addLead: (state, action: PayloadAction<Lead>) => {
+      state.leads.unshift(action.payload);
+    },
+    updateLead: (state, action: PayloadAction<Lead>) => {
+      const index = state.leads.findIndex(lead => lead.id === action.payload.id);
+      if (index !== -1) {
+        state.leads[index] = action.payload;
+      }
+      if (state.selectedLead?.id === action.payload.id) {
+        state.selectedLead = action.payload;
+      }
+    },
+    deleteLead: (state, action: PayloadAction<string>) => {
+      state.leads = state.leads.filter(lead => lead.id !== action.payload);
+      if (state.selectedLead?.id === action.payload) {
+        state.selectedLead = null;
+      }
+    },
+    setSelectedLead: (state, action: PayloadAction<Lead | null>) => {
+      state.selectedLead = action.payload;
+    },
+    setFilters: (state, action: PayloadAction<Partial<LeadsState['filters']>>) => {
       state.filters = { ...state.filters, ...action.payload };
-      // Reset pagination when filters change
-      state.pagination.page = 1;
     },
-    setLeadsPagination: (state, action: PayloadAction<Partial<LeadsState['pagination']>>) => {
-      state.pagination = { ...state.pagination, ...action.payload };
+    addActivity: (state, action: PayloadAction<Activity>) => {
+      state.activities.push(action.payload);
     },
-    clearLeadsError: (state) => {
-      state.error = null;
-    },
-  },
-  extraReducers: (builder) => {
-    builder
-      // fetchLeads
-      .addCase(fetchLeads.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchLeads.fulfilled, (state, action) => {
-        state.loading = false;
-        state.leads = action.payload.leads;
-        state.pagination.total = action.payload.total;
-        state.pagination.totalPages = Math.ceil(action.payload.total / state.pagination.limit);
-      })
-      .addCase(fetchLeads.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // createLead
-      .addCase(createLead.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(createLead.fulfilled, (state, action) => {
-        state.loading = false;
-        state.leads.unshift(action.payload);
-        // Update total count
-        state.pagination.total += 1;
-        state.pagination.totalPages = Math.ceil(state.pagination.total / state.pagination.limit);
-      })
-      .addCase(createLead.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // updateLead
-      .addCase(updateLead.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(updateLead.fulfilled, (state, action) => {
-        state.loading = false;
-        const index = state.leads.findIndex(lead => lead.id === action.payload.id);
-        if (index !== -1) {
-          state.leads[index] = action.payload;
-        }
-      })
-      .addCase(updateLead.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // deleteLead
-      .addCase(deleteLead.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(deleteLead.fulfilled, (state, action) => {
-        state.loading = false;
-        state.leads = state.leads.filter(lead => lead.id !== action.payload);
-        // Update total count
-        state.pagination.total -= 1;
-        state.pagination.totalPages = Math.ceil(state.pagination.total / state.pagination.limit);
-      })
-      .addCase(deleteLead.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      });
   },
 });
 
-export const { setLeadsFilters, setLeadsPagination, clearLeadsError } = leadsSlice.actions;
-
-export const selectLeads = (state: RootState) => state.leads.leads;
-export const selectLeadsLoading = (state: RootState) => state.leads.loading;
-export const selectLeadsError = (state: RootState) => state.leads.error;
-export const selectLeadsPagination = (state: RootState) => state.leads.pagination;
-export const selectLeadsFilters = (state: RootState) => state.leads.filters;
-
+export const { setLeads, addLead, updateLead, deleteLead, setSelectedLead, setFilters, addActivity } = leadsSlice.actions;
 export default leadsSlice.reducer;
