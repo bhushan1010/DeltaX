@@ -14,9 +14,9 @@ COPY . .
 # Build the Vite app
 RUN npm run build
 
-# Ensure we listen on port 3000 and bind to all interfaces
+# Ensure we listen on port 3000
 ENV PORT=3000
 EXPOSE 3000
 
-# Explicitly bind to 0.0.0.0 and port 3000
-CMD ["serve", "-s", "dist", "-l", "3000", "-a", "0.0.0.0"]
+# Remove the unsupported -a flag
+CMD ["serve", "-s", "dist", "-l", "3000"]
