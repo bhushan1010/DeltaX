@@ -2,11 +2,14 @@
   "name": "deltax",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "apps/api/dist/server.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
+    "install": "npm install --prefix apps/api && npm install --legacy-peer-deps --prefix apps/web",
+    "build": "npm run build --prefix apps/api && npm run build --prefix apps/web",
+    "start": "npm start --prefix apps/api",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
