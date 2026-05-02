@@ -15,7 +15,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
   "dependencies": {
     "@types/express": "^5.0.6",
     "@types/react": "^19.2.14",

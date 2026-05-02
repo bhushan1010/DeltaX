@@ -39,7 +39,11 @@ jobs:
 
     - name: Build Web
       working-directory: ./apps/web
-      run: npm run build
+      run: npm run build || (echo "Build failed, showing directory structure:" && find . -type f -name "*.js" -o -name "*.mjs" && exit 1)
+
+    - name: Verify Build Output
+      working-directory: ./apps/web
+      run: ls -la dist/
 
   docker-build:
     needs: test-and-build
