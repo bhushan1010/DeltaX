@@ -1,21 +1,31 @@
-FROM node:22-alpine
-
+# --- Build Stage ---
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (using legacy peer deps for react-popper/radix compatibility)
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+# Install dependencies
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
 
-# Build application
+# Build the Vite app
 RUN npm run build
 
-# Expose default Vite preview port
+# --- Production Stage ---
+FROM node:20-alpine
+WORKDIR /app
+
+# Install serve to host static files
+RUN npm install -g serve
+
+# Copy built static files from builder
+COPY --from=builder /app/dist ./dist
+
+# Expose port (Railway injects $PORT)
 EXPOSE 3000
 
-# Start server using vite preview
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3000"]
+# Serve static files on Railway's assigned port
+CMD serve -s dist -l ${PORT:-3000}
