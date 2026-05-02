@@ -14,8 +14,9 @@ COPY . .
 # Build the Vite app
 RUN npm run build
 
-# Expose port
+# Ensure we listen on port 3000 and bind to all interfaces
+ENV PORT=3000
 EXPOSE 3000
 
-# Serve the built static files (PORT is injected by Railway)
-CMD serve -s dist -l $PORT
+# Explicitly bind to 0.0.0.0 and port 3000
+CMD ["serve", "-s", "dist", "-l", "3000", "-a", "0.0.0.0"]
