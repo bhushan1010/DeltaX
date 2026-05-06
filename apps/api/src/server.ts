@@ -99,6 +99,15 @@ io.on('connection', (socket) => {
   });
 });
 
+import path from 'path';
+// Serve static frontend files from apps/web/dist
+app.use(express.static(path.join(__dirname, '../../web/dist')));
+
+// Catch-all route to serve the React SPA index.html for any unrecognized routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../web/dist/index.html'));
+});
+
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
