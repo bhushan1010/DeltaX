@@ -4,12 +4,17 @@ import { Project } from '../entity/Project';
 import { ProjectMember } from '../entity/ProjectMember';
 import { Task } from '../entity/Task';
 
+const isProduction = process.env.NODE_ENV === 'production';
+const databaseUrl = process.env.DATABASE_URL;
+
 export const AppDataSource = new DataSource({
-  type: 'sqlite',
-  database: 'database.sqlite',
+  type: databaseUrl ? 'postgres' : 'sqlite',
+  ...(databaseUrl 
+    ? { url: databaseUrl, ssl: isProduction ? { rejectUnauthorized: false } : false }
+    : { database: 'database.sqlite' }
+  ),
   entities: [User, Project, ProjectMember, Task],
-  migrations: [__dirname + '/../migration/*{.ts,.js}'],
   subscribers: [],
-  synchronize: true,
+  synchronize: true, // Enabled in production for demo purposes to auto-create tables
   logging: false,
 });

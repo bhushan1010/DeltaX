@@ -286,6 +286,9 @@ export default function LoginPage() {
                   <div className="text-[11px] font-mono truncate" style={{ color: 'rgba(255,255,255,0.75)' }}>
                     {account.email}
                   </div>
+                  <div className="text-[11px] font-mono truncate" style={{ color: 'rgba(255,255,255,0.75)', marginTop: '2px' }}>
+                    Pwd: {account.password}
+                  </div>
                   <div className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
                     {account.description}
                   </div>
