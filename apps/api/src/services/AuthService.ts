@@ -1,4 +1,4 @@
-import { User } from '../entity/User';
+import { User, UserRole } from '../entity/User';
 import { AppDataSource } from '../config/ormconfig';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
@@ -6,7 +6,23 @@ import * as jwt from 'jsonwebtoken';
 export class AuthService {
   userRepository = AppDataSource.getRepository(User);
 
-  async register(email: string, password: string, fullName: string, role: string): Promise<User> {
+  async register(
+    email: string,
+    password: string,
+    fullName: string,
+    role: string,
+  ): Promise<User> {
+    // Map incoming role string to the enum; default to worker
+    const roleMap: Record<string, UserRole> = {
+      admin:   UserRole.ADMIN,
+      manager: UserRole.MANAGER,
+      lead:    UserRole.LEAD,
+      worker:  UserRole.WORKER,
+      // Legacy alias kept for backwards-compat
+      member:  UserRole.WORKER,
+    };
+    const validRole: UserRole = roleMap[role] ?? UserRole.WORKER;
+
     // Check if user already exists
     const existingUser = await this.userRepository.findOneBy({ email });
     if (existingUser) {
@@ -22,7 +38,7 @@ export class AuthService {
       email,
       password_hash: passwordHash,
       full_name: fullName,
-      role,
+      role: validRole,
     });
 
     return await this.userRepository.save(user);
@@ -44,20 +60,24 @@ export class AuthService {
 
   generateToken(user: User): string {
     const payload = {
-      id: user.id,
+      id:   user.id,
       email: user.email,
-      role: user.role,
+      role:  user.role,
     };
 
-    return jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '15m' });
+    return jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret', {
+      expiresIn: '15m',
+    });
   }
 
   generateRefreshToken(user: User): string {
-    const payload = {
-      id: user.id,
-    };
+    const payload = { id: user.id };
 
-    return jwt.sign(payload, process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret', { expiresIn: '7d' });
+    return jwt.sign(
+      payload,
+      process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret',
+      { expiresIn: '7d' },
+    );
   }
 
   verifyToken(token: string): any {
@@ -65,6 +85,9 @@ export class AuthService {
   }
 
   verifyRefreshToken(token: string): any {
-    return jwt.verify(token, process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret');
+    return jwt.verify(
+      token,
+      process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret',
+    );
   }
 }

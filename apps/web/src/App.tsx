@@ -4,32 +4,24 @@ import { store, RootState } from './store';
 import { ThemeProvider } from './contexts/ThemeContext';
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
-import LeadsListPage from './pages/leads/LeadsListPage';
-import LeadDetailPage from './pages/leads/LeadDetailPage';
-import AutomationPage from './pages/automation/AutomationPage';
 import UsersPage from './pages/users/UsersPage';
 import AppLayout from './components/layout/AppLayout';
-import LeadFormModal from './components/forms/LeadFormModal';
 import { Toaster } from './components/ui/sonner';
+
+import ProjectsListPage from './pages/projects/ProjectsListPage';
+import ProjectDetailPage from './pages/projects/ProjectDetailPage';
+import TasksPage from './pages/tasks/TasksPage';
 
 function AppContent() {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
-  const [editingLeadId, setEditingLeadId] = useState<string | undefined>(undefined);
+  const [currentProjectId, setCurrentProjectId] = useState<string>('');
 
-  const handleNavigate = (page: string, leadId?: string) => {
+  const handleNavigate = (page: string, id?: string) => {
     setCurrentPage(page);
-  };
-
-  const handleOpenLeadForm = (leadId?: string) => {
-    setEditingLeadId(leadId);
-    setIsLeadFormOpen(true);
-  };
-
-  const handleCloseLeadForm = () => {
-    setIsLeadFormOpen(false);
-    setEditingLeadId(undefined);
+    if (page === 'project-detail' && id) {
+      setCurrentProjectId(id);
+    }
   };
 
   if (!isAuthenticated) {
@@ -40,23 +32,12 @@ function AppContent() {
     switch (currentPage) {
       case 'dashboard':
         return <DashboardPage />;
-      case 'leads':
-        return <LeadsListPage onNavigate={handleNavigate} onOpenLeadForm={handleOpenLeadForm} />;
-      case 'lead-detail':
-        return (
-          <LeadDetailPage
-            onNavigate={handleNavigate}
-            onEdit={() => {
-              const leads = store.getState().leads.leads;
-              const selectedLead = store.getState().leads.selectedLead;
-              if (selectedLead) {
-                handleOpenLeadForm(selectedLead.id);
-              }
-            }}
-          />
-        );
-      case 'automation':
-        return <AutomationPage />;
+      case 'projects':
+        return <ProjectsListPage onNavigate={handleNavigate} />;
+      case 'project-detail':
+        return <ProjectDetailPage onNavigate={handleNavigate} projectId={currentProjectId} />;
+      case 'tasks':
+        return <TasksPage />;
       case 'users':
         return <UsersPage />;
       default:
@@ -69,11 +50,6 @@ function AppContent() {
       <AppLayout currentPage={currentPage} onNavigate={handleNavigate}>
         {renderPage()}
       </AppLayout>
-      <LeadFormModal
-        isOpen={isLeadFormOpen}
-        onClose={handleCloseLeadForm}
-        leadId={editingLeadId}
-      />
     </>
   );
 }

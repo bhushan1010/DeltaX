@@ -1,12 +1,10 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
 import { useTheme } from '../../contexts/ThemeContext';
 import {
   LayoutDashboard,
-  Users,
-  GitBranch,
   Settings,
   LogOut,
   Bell,
@@ -14,12 +12,13 @@ import {
   Menu,
   X,
   Sun,
-  Moon
+  Moon,
+  Folder,
+  CheckSquare
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Badge } from '../../components/ui/badge';
-import { useState } from 'react';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -35,9 +34,9 @@ export default function AppLayout({ children, currentPage, onNavigate }: AppLayo
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'leads', label: 'Leads', icon: Users },
-    { id: 'automation', label: 'Automation', icon: GitBranch },
-    ...(user?.role === 'Business Manager' ? [{ id: 'users', label: 'Users', icon: Settings }] : []),
+    { id: 'projects', label: 'Projects', icon: Folder },
+    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+    ...(user?.role === 'admin' ? [{ id: 'users', label: 'Team', icon: Settings }] : []),
   ];
 
   const handleLogout = () => {
@@ -63,11 +62,11 @@ export default function AppLayout({ children, currentPage, onNavigate }: AppLayo
           <div className="p-6 border-b border-border">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded flex items-center justify-center bg-primary">
-                <span className="text-white font-bold">HSR</span>
+                <span className="text-white font-bold">DX</span>
               </div>
               <div>
-                <h1 className="font-bold text-foreground">LeadFlow Pro</h1>
-                <p className="text-xs text-muted-foreground">HSR Motors</p>
+                <h1 className="font-bold text-foreground">DeltaX</h1>
+                <p className="text-xs text-muted-foreground">Projects</p>
               </div>
             </div>
           </div>
@@ -143,7 +142,7 @@ export default function AppLayout({ children, currentPage, onNavigate }: AppLayo
               />
               <input
                 type="search"
-                placeholder="Search leads..."
+                placeholder="Search..."
                 className="pl-10 pr-4 py-2 rounded border border-border bg-background text-foreground outline-none focus:ring-2 focus:ring-ring w-[300px]"
               />
             </div>

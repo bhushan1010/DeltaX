@@ -6,9 +6,9 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
-import leadRoutes from './routes/leads.routes';
-import leadActivityRoutes from './routes/leadActivities.routes';
-import automationRuleRoutes from './routes/automationRules.routes';
+import projectRoutes from './routes/projects.routes';
+import taskRoutes from './routes/tasks.routes';
+import userRoutes from './routes/users.routes';
 import { AppDataSource } from './config/ormconfig';
 
 // Load environment variables
@@ -48,20 +48,20 @@ app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    service: 'LeadFlow Pro API'
+    service: 'DeltaX API'
   });
 });
 
 // API routes
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/leads', leadRoutes);
-app.use('/api/v1/lead-activities', leadActivityRoutes);
-app.use('/api/v1/automation-rules', automationRuleRoutes);
+app.use('/api/v1/projects', projectRoutes);
+app.use('/api/v1/tasks', taskRoutes);
+app.use('/api/v1/users', userRoutes);
 
 // Basic route
 app.get('/api/v1/', (req, res) => {
   res.json({ 
-    message: 'Welcome to LeadFlow Pro API',
+    message: 'Welcome to DeltaX API',
     version: '1.0.0'
   });
 });
@@ -81,16 +81,16 @@ app.use((err: any, req: any, res: any, next: any) => {
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  // Join a lead room to receive updates for a specific lead
-  socket.on('join_lead_room', (leadId: string) => {
-    socket.join(leadId);
-    console.log(`Socket ${socket.id} joined lead room: ${leadId}`);
+  // Join a project room to receive updates for a specific project
+  socket.on('join_project_room', (projectId: string) => {
+    socket.join(projectId);
+    console.log(`Socket ${socket.id} joined project room: ${projectId}`);
   });
 
-  // Leave a lead room
-  socket.on('leave_lead_room', (leadId: string) => {
-    socket.leave(leadId);
-    console.log(`Socket ${socket.id} left lead room: ${leadId}`);
+  // Leave a project room
+  socket.on('leave_project_room', (projectId: string) => {
+    socket.leave(projectId);
+    console.log(`Socket ${socket.id} left project room: ${projectId}`);
   });
 
   // Handle disconnection

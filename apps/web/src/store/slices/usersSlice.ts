@@ -8,21 +8,27 @@ interface UsersState {
 const mockUsers: User[] = [
   {
     id: '1',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@hsrmotors.com',
-    role: 'Sales Agent',
+    name: 'Alice Admin',
+    email: 'admin@deltax.com',
+    role: 'admin',
   },
   {
     id: '2',
-    name: 'Mike Chen',
-    email: 'mike.chen@hsrmotors.com',
-    role: 'Sales Agent',
+    name: 'Mark Manager',
+    email: 'manager@deltax.com',
+    role: 'manager',
   },
   {
     id: '3',
-    name: 'Admin User',
-    email: 'admin@hsrmotors.com',
-    role: 'Business Manager',
+    name: 'Leo Lead',
+    email: 'lead@deltax.com',
+    role: 'lead',
+  },
+  {
+    id: '4',
+    name: 'Wendy Worker',
+    email: 'worker@deltax.com',
+    role: 'worker',
   },
 ];
 

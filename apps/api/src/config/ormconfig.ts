@@ -1,13 +1,13 @@
 import { DataSource } from 'typeorm';
 import { User } from '../entity/User';
-import { Lead } from '../entity/Lead';
-import { LeadActivity } from '../entity/LeadActivity';
-import { AutomationRule } from '../entity/AutomationRule';
+import { Project } from '../entity/Project';
+import { ProjectMember } from '../entity/ProjectMember';
+import { Task } from '../entity/Task';
 
 export const AppDataSource = new DataSource({
   type: 'sqlite',
-  database: ':memory:',
-  entities: [User, Lead, LeadActivity, AutomationRule],
+  database: 'database.sqlite',
+  entities: [User, Project, ProjectMember, Task],
   migrations: [__dirname + '/../migration/*{.ts,.js}'],
   subscribers: [],
   synchronize: true,

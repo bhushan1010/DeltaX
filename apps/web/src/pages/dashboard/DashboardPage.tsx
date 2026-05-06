@@ -1,81 +1,66 @@
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../store';
+import { fetchTaskStats } from '../../store/slices/taskSlice';
+import { fetchProjects } from '../../store/slices/projectSlice';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { TrendingUp, Users, DollarSign, Target } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { CheckCircle, Clock, AlertCircle, ListTodo, Users, FolderKanban } from 'lucide-react';
 
 export default function DashboardPage() {
-  const leads = useSelector((state: RootState) => state.leads.leads);
+  const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
+  const { stats } = useSelector((state: RootState) => state.tasks);
+  const { projects } = useSelector((state: RootState) => state.projects);
 
-  const statusCounts = leads.reduce((acc, lead) => {
-    acc[lead.status] = (acc[lead.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  useEffect(() => {
+    dispatch(fetchTaskStats());
+    dispatch(fetchProjects());
+  }, [dispatch]);
 
-  const statusColors: Record<string, string> = {
-    'New': '#3b82f6',
-    'Contacted': '#8b5cf6',
-    'Qualified': '#10b981',
-    'Negotiation': '#f59e0b',
-    'Converted': '#059669',
-    'Not Interested': '#6b7280',
-    'Lost': '#ef4444',
-  };
+  const taskStatusData = stats ? [
+    { name: 'To Do', value: stats.todo, color: '#64748b' },
+    { name: 'In Progress', value: stats.inProgress, color: '#3b82f6' },
+    { name: 'Review', value: stats.review, color: '#f59e0b' },
+    { name: 'Done', value: stats.done, color: '#10b981' },
+  ] : [];
 
-  const pieData = Object.entries(statusCounts).map(([status, count]) => ({
-    name: status,
-    value: count,
-    color: statusColors[status],
-  }));
-
-  const monthlyData = [
-    { month: 'Jan', leads: 45, converted: 12 },
-    { month: 'Feb', leads: 52, converted: 15 },
-    { month: 'Mar', leads: 48, converted: 14 },
-    { month: 'Apr', leads: 61, converted: 18 },
-    { month: 'May', leads: 38, converted: 8 },
-  ];
-
-  const conversionRate = leads.length > 0
-    ? ((leads.filter(l => l.status === 'Converted').length / leads.length) * 100).toFixed(1)
+  // Compute completion rate across all projects' tasks
+  const completionRate = stats && stats.total > 0
+    ? ((stats.done / stats.total) * 100).toFixed(1)
     : '0';
-
-  const totalRevenue = leads
-    .filter(l => l.status === 'Converted')
-    .reduce((sum, l) => sum + (l.budget || 0), 0);
-
-  const topAgents = [
-    { name: 'Sarah Johnson', leads: 24, conversions: 8 },
-    { name: 'Mike Chen', leads: 19, conversions: 6 },
-    { name: 'Lisa Martinez', leads: 15, conversions: 5 },
-  ];
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground">
-          Dashboard
-        </h1>
-        <p className="text-muted-foreground">
-          Welcome back, {user?.name}! Here's your performance overview.
-        </p>
+        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground">Welcome back, {user?.name}! Here's your overview.</p>
       </div>
 
-      {/* KPI Cards */}
+      {/* Task KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card style={{ borderRadius: '8px' }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Leads</p>
-                <p className="text-2xl font-bold mt-1 text-foreground">
-                  {leads.length}
-                </p>
+                <p className="text-sm text-muted-foreground">Total Tasks</p>
+                <p className="text-2xl font-bold mt-1 text-foreground">{stats?.total || 0}</p>
               </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                   style={{ background: '#dbeafe' }}>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: '#e0e7ff' }}>
+                <ListTodo size={24} style={{ color: '#4f46e5' }} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card style={{ borderRadius: '8px' }}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">My Tasks</p>
+                <p className="text-2xl font-bold mt-1 text-foreground">{stats?.myTasks || 0}</p>
+              </div>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: '#dbeafe' }}>
                 <Users size={24} style={{ color: '#3b82f6' }} />
               </div>
             </div>
@@ -86,14 +71,11 @@ export default function DashboardPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Conversion Rate</p>
-                <p className="text-2xl font-bold mt-1 text-foreground">
-                  {conversionRate}%
-                </p>
+                <p className="text-sm text-muted-foreground">In Progress</p>
+                <p className="text-2xl font-bold mt-1 text-foreground">{stats?.inProgress || 0}</p>
               </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                   style={{ background: '#dcfce7' }}>
-                <Target size={24} style={{ color: '#10b981' }} />
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: '#fef3c7' }}>
+                <Clock size={24} style={{ color: '#f59e0b' }} />
               </div>
             </div>
           </CardContent>
@@ -103,31 +85,11 @@ export default function DashboardPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-bold mt-1 text-foreground">
-                  ${(totalRevenue / 1000).toFixed(0)}K
-                </p>
+                <p className="text-sm text-muted-foreground">Overdue</p>
+                <p className="text-2xl font-bold mt-1 text-foreground">{stats?.overdue || 0}</p>
               </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                   style={{ background: '#fef3c7' }}>
-                <DollarSign size={24} style={{ color: '#f59e0b' }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card style={{ borderRadius: '8px' }}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Active Deals</p>
-                <p className="text-2xl font-bold mt-1 text-foreground">
-                  {leads.filter(l => ['Qualified', 'Negotiation'].includes(l.status)).length}
-                </p>
-              </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                   style={{ background: '#e0e7ff' }}>
-                <TrendingUp size={24} style={{ color: '#4f46e5' }} />
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: '#fee2e2' }}>
+                <AlertCircle size={24} style={{ color: '#ef4444' }} />
               </div>
             </div>
           </CardContent>
@@ -135,25 +97,25 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Lead Status Distribution */}
+        {/* Task Status Distribution */}
         <Card style={{ borderRadius: '8px' }}>
           <CardHeader>
-            <CardTitle>Lead Status Distribution</CardTitle>
+            <CardTitle>Task Status Overview</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={pieData}
+                  data={taskStatusData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {pieData.map((entry, index) => (
+                  {taskStatusData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -163,71 +125,100 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Monthly Trends */}
+        {/* Task Progress */}
         <Card style={{ borderRadius: '8px' }}>
           <CardHeader>
-            <CardTitle>Monthly Lead Trends</CardTitle>
+            <CardTitle>Task Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="month" stroke="#64748b" />
-                <YAxis stroke="#64748b" />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="leads"
-                  stroke="#4f46e5"
-                  strokeWidth={2}
-                  name="Total Leads"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="converted"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  name="Converted"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm text-muted-foreground">To Do</span>
+                  <span className="text-sm font-medium">{stats?.todo || 0}</span>
+                </div>
+                <div className="w-full bg-secondary rounded-full h-2">
+                  <div className="bg-slate-500 h-2 rounded-full" style={{ width: `${stats?.total ? (stats.todo / stats.total) * 100 : 0}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm text-muted-foreground">In Progress</span>
+                  <span className="text-sm font-medium">{stats?.inProgress || 0}</span>
+                </div>
+                <div className="w-full bg-secondary rounded-full h-2">
+                  <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${stats?.total ? (stats.inProgress / stats.total) * 100 : 0}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm text-muted-foreground">Review</span>
+                  <span className="text-sm font-medium">{stats?.review || 0}</span>
+                </div>
+                <div className="w-full bg-secondary rounded-full h-2">
+                  <div className="bg-amber-500 h-2 rounded-full" style={{ width: `${stats?.total ? (stats.review / stats.total) * 100 : 0}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm text-muted-foreground">Done</span>
+                  <span className="text-sm font-medium">{stats?.done || 0}</span>
+                </div>
+                <div className="w-full bg-secondary rounded-full h-2">
+                  <div className="bg-green-500 h-2 rounded-full" style={{ width: `${stats?.total ? (stats.done / stats.total) * 100 : 0}%` }} />
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Top Performing Agents */}
-      <Card style={{ borderRadius: '8px' }}>
-        <CardHeader>
-          <CardTitle>Top Performing Agents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 text-muted-foreground">Agent Name</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground">Total Leads</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground">Conversions</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground">Conversion Rate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topAgents.map((agent, idx) => (
-                  <tr key={idx} className="border-b border-border">
-                    <td className="py-3 px-4 text-foreground">{agent.name}</td>
-                    <td className="py-3 px-4 text-foreground">{agent.leads}</td>
-                    <td className="py-3 px-4 text-foreground">{agent.conversions}</td>
-                    <td className="py-3 px-4" style={{ color: '#10b981' }}>
-                      {((agent.conversions / agent.leads) * 100).toFixed(1)}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Quick Stats Row — G6 fix: replaced Leads/Conversion Rate with Projects KPI */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card style={{ borderRadius: '8px' }}>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: '#dcfce7' }}>
+                <CheckCircle size={24} style={{ color: '#10b981' }} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Completed Tasks</p>
+                <p className="text-2xl font-bold text-foreground">{stats?.done || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* G6 fix: Projects count instead of Leads */}
+        <Card style={{ borderRadius: '8px' }}>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: '#ede9fe' }}>
+                <FolderKanban size={24} style={{ color: '#7c3aed' }} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">My Projects</p>
+                <p className="text-2xl font-bold text-foreground">{projects.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* G6 fix: Completion Rate instead of Conversion Rate */}
+        <Card style={{ borderRadius: '8px' }}>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: '#d1fae5' }}>
+                <AlertCircle size={24} style={{ color: '#059669' }} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Completion Rate</p>
+                <p className="text-2xl font-bold text-foreground">{completionRate}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

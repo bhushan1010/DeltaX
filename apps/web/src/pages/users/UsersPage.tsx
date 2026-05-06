@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { addUser, updateUserInList, deleteUser } from '../../store/slices/usersSlice';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -12,7 +12,7 @@ import { Badge } from '../../components/ui/badge';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { User } from '../../store/slices/authSlice';
+import { User, UserRole } from '../../store/slices/authSlice';
 
 export default function UsersPage() {
   const dispatch = useDispatch();
@@ -23,7 +23,7 @@ export default function UsersPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'Sales Agent' as const,
+    role: 'worker' as UserRole,
   });
 
   const getInitials = (name: string) => {
@@ -47,7 +47,7 @@ export default function UsersPage() {
       setFormData({
         name: '',
         email: '',
-        role: 'Sales Agent',
+        role: 'worker',
       });
     }
     setIsModalOpen(true);
@@ -74,17 +74,17 @@ export default function UsersPage() {
     setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: string | number) => {
     if (confirm('Are you sure you want to delete this user?')) {
-      dispatch(deleteUser(id));
+      dispatch(deleteUser(id.toString()));
       toast.success('User deleted successfully');
     }
   };
 
-  if (currentUser?.role !== 'Business Manager') {
+  if (currentUser?.role !== 'admin') {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Access denied. Only Business Managers can view this page.</p>
+        <p className="text-muted-foreground">Access denied. Only Admins can view this page.</p>
       </div>
     );
   }
@@ -115,7 +115,11 @@ export default function UsersPage() {
                 <Avatar className="w-16 h-16">
                   <AvatarFallback
                     style={{
-                      background: user.role === 'Business Manager' ? '#f59e0b' : '#818cf8',
+                      background:
+                        user.role === 'admin'   ? '#ef4444' :
+                        user.role === 'manager' ? '#f59e0b' :
+                        user.role === 'lead'    ? '#8b5cf6' :
+                                                 '#818cf8',
                       color: 'white',
                     }}
                   >
@@ -144,9 +148,18 @@ export default function UsersPage() {
               <p className="text-sm mb-3 text-muted-foreground">{user.email}</p>
               <Badge
                 style={{
-                  background: user.role === 'Business Manager' ? '#fef3c7' : '#e0e7ff',
-                  color: user.role === 'Business Manager' ? '#f59e0b' : '#4f46e5',
+                  background:
+                    user.role === 'admin'   ? '#fef2f2' :
+                    user.role === 'manager' ? '#fef3c7' :
+                    user.role === 'lead'    ? '#f5f3ff' :
+                                             '#e0e7ff',
+                  color:
+                    user.role === 'admin'   ? '#ef4444' :
+                    user.role === 'manager' ? '#f59e0b' :
+                    user.role === 'lead'    ? '#8b5cf6' :
+                                             '#4f46e5',
                   borderRadius: '8px',
+                  textTransform: 'capitalize',
                 }}
               >
                 {user.role}
@@ -186,14 +199,16 @@ export default function UsersPage() {
               <Label htmlFor="role">Role *</Label>
               <Select
                 value={formData.role}
-                onValueChange={(value: any) => setFormData({ ...formData, role: value })}
+                onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
               >
                 <SelectTrigger id="role">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Sales Agent">Sales Agent</SelectItem>
-                  <SelectItem value="Business Manager">Business Manager</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="lead">Lead</SelectItem>
+                  <SelectItem value="worker">Worker</SelectItem>
                 </SelectContent>
               </Select>
             </div>
