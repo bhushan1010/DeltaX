@@ -1,21 +1,34 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
 # Install dependencies
-RUN npm ci || npm install
+COPY package*.json ./
+RUN npm ci
 
-# Copy source code
+# Copy source and build
 COPY . .
+RUN npm run build
 
-# Build TypeScript code
-RUN npm run build || npx tsc
+# ──────────────────────────────────────────────
+# Production image
+# ──────────────────────────────────────────────
+FROM node:20-alpine AS runner
 
-# Expose API port
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Install production deps only
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# Copy compiled JS from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Copy the web frontend build (served by Express in single-service mode)
+COPY --from=builder /app/../../web/dist ./web/dist 2>/dev/null || true
+
 EXPOSE 3001
 
-# Command to run the application
-CMD ["npm", "start"]
+CMD ["node", "dist/server.js"]

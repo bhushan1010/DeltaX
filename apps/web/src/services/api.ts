@@ -37,43 +37,6 @@ apiClient.interceptors.response.use(
 
 export default apiClient;
 
-// Lead API functions
-export const leadApi = {
-  getLeads: (params: any) => apiClient.get('/v1/leads', { params }),
-  getLeadById: (id: string) => apiClient.get(`/v1/leads/${id}`),
-  createLead: (data: any) => apiClient.post('/v1/leads', data),
-  updateLead: (id: string, data: any) => apiClient.put(`/v1/leads/${id}`, data),
-  deleteLead: (id: string) => apiClient.delete(`/v1/leads/${id}`),
-  assignLead: (leadId: string, userId: string) => 
-    apiClient.post(`/v1/leads/${leadId}/assign`, { userId }),
-  updateLeadStatus: (leadId: string, status: string) => 
-    apiClient.patch(`/v1/leads/${leadId}/status`, { status }),
-};
-
-// Activity API functions
-export const activityApi = {
-  getActivitiesByLeadId: (leadId: string, params: any) => 
-    apiClient.get(`/v1/lead-activities/lead/${leadId}/activities`, { params }),
-  createActivity: (data: any) => apiClient.post('/v1/lead-activities', data),
-  updateActivity: (id: string, data: any) => 
-    apiClient.put(`/v1/lead-activities/${id}`, data),
-  deleteActivity: (id: string) => apiClient.delete(`/v1/lead-activities/${id}`),
-  completeActivity: (id: string) => 
-    apiClient.patch(`/v1/lead-activities/${id}/complete`),
-};
-
-// Automation Rule API functions
-export const automationRuleApi = {
-  getRules: (params: any) => apiClient.get('/v1/automation-rules', { params }),
-  createRule: (data: any) => apiClient.post('/v1/automation-rules', data),
-  getRuleById: (id: string) => apiClient.get(`/v1/automation-rules/${id}`),
-  updateRule: (id: string, data: any) => 
-    apiClient.put(`/v1/automation-rules/${id}`, data),
-  deleteRule: (id: string) => apiClient.delete(`/v1/automation-rules/${id}`),
-  toggleRuleStatus: (id: string) => 
-    apiClient.patch(`/v1/automation-rules/${id}/toggle`),
-};
-
 // Auth API functions
 export const authApi = {
   register: (data: any) => apiClient.post('/v1/auth/register', data),

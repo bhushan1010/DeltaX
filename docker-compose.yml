@@ -1,18 +1,20 @@
 version: '3.8'
 
+# Local development compose — mirrors the Railway single-service setup.
+# The API serves both the REST endpoints and the built React frontend.
+
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: leadflow-postgres
+    container_name: deltax-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: leadflow
-      POSTGRES_PASSWORD: leadflow123
-      POSTGRES_DB: leadflow_pro
+      POSTGRES_USER: deltax
+      POSTGRES_PASSWORD: deltax_dev_password
+      POSTGRES_DB: deltax_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infra/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     healthcheck:
@@ -21,62 +23,25 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    container_name: leadflow-redis
-    restart: unless-stopped
-    command: redis-server --save 60 1 --loglevel warning
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Backend API
+  # Backend API + Frontend (single service)
   api:
-    build: ./apps/api
-    container_name: leadflow-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deltax-api
     restart: unless-stopped
-    env_file:
-      - ./apps/api/.env
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     ports:
       - "3001:3001"
-    volumes:
-      - ./apps/api:/app
-      - /app/node_modules
     environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://leadflow:leadflow123@postgres:5432/leadflow_pro
-      - REDIS_URL=redis://redis:6379
-    command: npm run dev
-
-  # Frontend Web App
-  web:
-    build: ./apps/web
-    container_name: leadflow-web
-    restart: unless-stopped
-    depends_on:
-      - api
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./apps/web:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
-      - VITE_API_URL=http://localhost:3001
-    command: npm run dev
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://deltax:deltax_dev_password@postgres:5432/deltax_db
+      - JWT_SECRET=local_dev_jwt_secret_change_me
+      - JWT_REFRESH_SECRET=local_dev_refresh_secret_change_me
+      - CORS_ORIGIN=http://localhost:3001
 
 volumes:
   postgres_data:
-  redis_data:

@@ -178,6 +178,8 @@ async function seed() {
 }
 
 seed().catch((err) => {
-  console.error('Seed failed:', err);
-  process.exit(1);
+  console.error('⚠️  Seed encountered an error (non-fatal):', err?.message ?? err);
+  // Exit 0 — seed failure should not prevent the server from starting
+  process.exit(0);
 });
+

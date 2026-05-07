@@ -1,55 +1,20 @@
 {
   "name": "deltax",
   "version": "1.0.0",
-  "description": "",
-  "main": "apps/api/dist/server.js",
-  "directories": {
-    "doc": "docs"
-  },
-  "scripts": {
-    "install": "npm install --prefix apps/api && npm install --legacy-peer-deps --prefix apps/web",
-    "build": "npm run build --prefix apps/api && npm run build --prefix apps/web",
-    "start": "npm start --prefix apps/api",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "description": "DeltaX Project Management Platform",
+  "private": true,
   "engines": {
     "node": ">=20.0.0"
   },
+  "scripts": {
+    "install:all": "npm install --prefix apps/api && npm install --legacy-peer-deps --prefix apps/web",
+    "build": "npm run build --prefix apps/api && npm run build --prefix apps/web",
+    "start": "npm start --prefix apps/api",
+    "dev:api": "npm run dev --prefix apps/api",
+    "dev:web": "npm run dev --prefix apps/web",
+    "test": "npm test --prefix apps/api && npm test --prefix apps/web"
+  },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@mui/icons-material": "^9.0.0",
-    "@mui/lab": "^9.0.0-beta.2",
-    "@mui/material": "^9.0.0",
-    "@reduxjs/toolkit": "^2.11.2",
-    "@types/express": "^5.0.6",
-    "@types/node": "^25.6.0",
-    "@xyflow/react": "^12.10.2",
-    "axios": "^1.15.2",
-    "bcryptjs": "^3.0.3",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "helmet": "^8.1.0",
-    "jsonwebtoken": "^9.0.3",
-    "morgan": "^1.10.1",
-    "pg": "^8.20.0",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "react-redux": "^9.2.0",
-    "react-router-dom": "^7.14.2",
-    "recharts": "^3.8.1",
-    "socket.io-client": "^4.8.3",
-    "ts-node": "^10.9.2",
-    "typeorm": "^0.3.28",
-    "typescript": "^6.0.3"
-  },
-  "devDependencies": {
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1"
-  }
+  "license": "ISC"
 }
