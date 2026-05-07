@@ -48,5 +48,5 @@ COPY --from=web-builder /app/web/dist ./web/dist
 # Railway injects PORT; default to 3001 for local testing
 EXPOSE 3001
 
-# Seed in background, start server in foreground
-CMD node dist/scripts/seed.js & node dist/server.js
+# Start the server
+CMD ["node", "dist/server.js"]
