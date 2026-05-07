@@ -2,11 +2,11 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies
+# Install API dependencies
 COPY package*.json ./
 RUN npm ci
 
-# Copy source and build
+# Copy API source and build
 COPY . .
 RUN npm run build
 
@@ -19,16 +19,14 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install production deps only
+# Install production API dependencies only
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-# Copy compiled JS from builder stage
+# Copy compiled API
 COPY --from=builder /app/dist ./dist
-
-# Copy the web frontend build (served by Express in single-service mode)
-COPY --from=builder /app/../../web/dist ./web/dist 2>/dev/null || true
 
 EXPOSE 3001
 
+# Start the server
 CMD ["node", "dist/server.js"]

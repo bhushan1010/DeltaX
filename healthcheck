@@ -1,0 +1,41 @@
+# Healthcheck Configuration for DeltaX API
+
+This folder contains healthcheck-related configurations and documentation.
+
+## Railway Healthcheck
+
+The Railway platform performs healthchecks by making HTTP requests to the `/health` endpoint.
+
+### Current Implementation
+The healthcheck endpoint is implemented in `apps/api/src/server.ts`:
+- Path: `/health`
+- Method: GET
+- Response: 200 OK with JSON status
+
+### Troubleshooting Failed Healthchecks
+
+If healthchecks are failing with "service unavailable", check:
+
+1. **Application Startup Logs**: Ensure the server is starting successfully
+2. **Port Binding**: Server must listen on `0.0.0.0:${PORT}`
+3. **Environment Variables**: Verify `PORT` is set correctly in Railway
+4. **Dependencies**: Check for database connection or other startup errors
+5. **Healthcheck Settings**: In Railway dashboard, verify:
+   - Path: `/health`
+   - Timeout: Adequate for your startup time (consider 2-3 minutes)
+   - Interval: Reasonable retry interval
+
+### Local Testing
+
+To test the healthcheck locally:
+```bash
+# Start the application
+docker compose up
+
+# In another terminal, test the endpoint
+curl -v http://localhost:3001/health
+
+# Expected response:
+# HTTP/1.1 200 OK
+# {"status":"OK","timestamp":"...","service":"DeltaX API"}
+```
