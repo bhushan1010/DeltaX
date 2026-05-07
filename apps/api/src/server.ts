@@ -112,17 +112,20 @@ io.on('connection', (socket) => {
   });
 });
 
-// Initialize database THEN start listening
-AppDataSource.initialize()
-  .then(() => {
-    console.log('✅ Database connected');
-    httpServer.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
+// Start listening immediately so the health check endpoint is available
+httpServer.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+
+  // Initialize database after server starts
+  AppDataSource.initialize()
+    .then(() => {
+      console.log('✅ Database connected');
+    })
+    .catch((err) => {
+      console.error('❌ Database connection error:', err);
+      // We don't exit the process here so that the /health endpoint remains available 
+      // and we can view the logs without constant container restarting.
     });
-  })
-  .catch((err) => {
-    console.error('❌ Database connection error:', err);
-    process.exit(1);
-  });
+});
 
 export default app;

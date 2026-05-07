@@ -175,6 +175,8 @@ async function seed() {
   );
 
   await AppDataSource.destroy();
+  console.log('✅ Seed process finished successfully.');
+  process.exit(0);
 }
 
 seed().catch((err) => {
